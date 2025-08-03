@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Network Traffic Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'dark-bg': '#1a1a1a',
+              'dark-card': '#2d2d2d',
+              'dark-border': '#404040',
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .transition-colors {
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 dark:bg-dark-bg transition-colors">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-10 dark:bg-dark-card dark:shadow-gray-900 dark-mode-transition">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-8">
+          <a href="/" class="text-2xl font-bold text-blue-600 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            CyberSafe IDS
+          </a>
+          <nav class="space-x-6 hidden md:flex">
+            <a href="/" class="text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 font-medium transition-colors">Home</a>
+            <a href="/predict" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors">Detection Analysis</a>
+            <a href="/statistics" class="text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400 font-medium transition-colors">Statistics</a>
+            <a href="/team" class="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 font-medium transition-colors">Our Team</a>
+            {% if session.role == 'admin' %}
+            <a href="/admin/users" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors">User Management</a>
+            {% endif %}
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button id="darkModeToggle" class="p-2 rounded-lg bg-gray-200 dark:bg-dark-card hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors" aria-label="Toggle Dark Mode">
+            <svg id="lightIcon" class="w-5 h-5 text-yellow-500 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg id="darkIcon" class="w-5 h-5 text-gray-700 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+          {% if 'user_id' in session %}
+          <a href="/profile" class="flex items-center group">
+            <div class="relative flex items-center">
+              {% if session.profile_image %}
+              <img src="{{ url_for('static', filename='uploads/' + session.profile_image) }}" alt="Profile" class="h-8 w-8 rounded-full object-cover border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors" />
+              {% else %}
+              <div class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors">
+                <span class="text-blue-600 dark:text-blue-400 font-medium">{{ session.username[0].upper() }}</span>
+              </div>
+              {% endif %}
+              <span class="ml-2 text-gray-700 dark:text-gray-300 font-medium transition-colors">{{ session.username }}</span>
+              <span class="absolute top-0 right-0 -mt-1 -mr-1 h-2 w-2 rounded-full bg-green-400 border-2 border-white dark:border-dark-card"></span>
+            </div>
+          </a>
+          <a href="/logout" class="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium">Logout</a>
+          {% else %}
+          <div class="flex items-center space-x-4">
+            <a href="/login" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">Login</a>
+            <a href="/signup" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">Sign Up</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      {% if not session.user_id %}
+      <!-- Login Required Section -->
+      <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-card dark:to-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 text-center">
+        <div class="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-6 py-8 rounded-lg max-w-2xl mx-auto">
+          <svg class="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <h2 class="text-2xl font-bold mb-4">Login Required</h2>
+          <p class="text-lg mb-6">Please log in to access our network traffic analysis tool. This feature helps you detect and prevent potential security threats.</p>
+          <div class="flex justify-center space-x-4">
+            <a href="/login" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors font-medium">Login</a>
+            <a href="/signup" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors font-medium">Sign Up</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      
+      <!-- Error Messages -->
+      {% if error %}
+      <div class="mb-6 p-4 rounded-xl border-l-4 bg-red-50 dark:bg-red-900/20 border-red-400 text-red-700 dark:text-red-300 transition-all duration-300 shadow-sm">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="font-medium">{{ error }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Analysis Form -->
+      <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-card dark:to-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 mb-8 transition-all duration-300 hover:shadow-2xl">
+        <div class="flex items-center mb-8">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-xl mr-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Network Traffic Analysis</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Analyze network traffic for potential security threats</p>
+          </div>
+        </div>
+        
+                 <!-- JSON Input Section -->
+         <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+           <div class="flex items-center justify-between mb-4">
+             <button type="button" id="fillFormBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg flex items-center">
+               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+               </svg>
+               Fill Form
+             </button>
+           </div>
+           <textarea 
+             id="jsonInput" 
+             placeholder="Enter JSON data here... Example:&#10;{&#10;  &quot;protocol_type&quot;: &quot;tcp&quot;,&#10;  &quot;service&quot;: &quot;http&quot;,&#10;  &quot;flag&quot;: &quot;SF&quot;,&#10;  &quot;src_bytes&quot;: 181,&#10;  &quot;dst_bytes&quot;: 5450,&#10;  &quot;logged_in&quot;: 1,&#10;  &quot;count&quot;: 1,&#10;  &quot;srv_count&quot;: 1,&#10;  &quot;serror_rate&quot;: 0.0,&#10;  &quot;rerror_rate&quot;: 0.0,&#10;  &quot;srv_rerror_rate&quot;: 0.0,&#10;  &quot;same_srv_rate&quot;: 1.0,&#10;  &quot;diff_srv_rate&quot;: 0.0,&#10;  &quot;dst_host_srv_count&quot;: 1,&#10;  &quot;dst_host_serror_rate&quot;: 0.0&#10;}"
+             class="w-full h-32 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:focus:border-purple-400 dark:focus:ring-purple-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500 font-mono text-sm resize-none"
+           ></textarea>
+         </div>
+
+        <form id="predictForm" action="/predict" method="POST" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <!-- Protocol Type -->
+          <div class="space-y-2">
+            <label for="protocol_type" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+              Protocol Type
+            </label>
+            <select name="protocol_type" id="protocol_type" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300">
+              <option value="">Select Protocol</option>
+              <option value="icmp">ICMP</option>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+            </select>
+          </div>
+
+          <!-- Service Type -->
+          <div class="space-y-2">
+            <label for="service" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              Service Type
+            </label>
+            <select name="service" id="service" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300">
+              <option value="">Select Service</option>
+              <option value="aol">aol</option>
+              <option value="auth">auth</option>
+              <option value="bgp">bgp</option>
+              <option value="courier">courier</option>
+              <option value="csnet_ns">csnet_ns</option>
+              <option value="ctf">ctf</option>
+              <option value="daytime">daytime</option>
+              <option value="discard">discard</option>
+              <option value="domain">domain</option>
+              <option value="domain_u">domain_u</option>
+              <option value="echo">echo</option>
+              <option value="eco_i">eco_i</option>
+              <option value="ecr_i">ecr_i</option>
+              <option value="efs">efs</option>
+              <option value="exec">exec</option>
+              <option value="finger">finger</option>
+              <option value="ftp">ftp</option>
+              <option value="ftp_data">ftp_data</option>
+              <option value="gopher">gopher</option>
+              <option value="harvest">harvest</option>
+              <option value="hostnames">hostnames</option>
+              <option value="http">http</option>
+              <option value="http_2784">http_2784</option>
+              <option value="http_443">http_443</option>
+              <option value="http_8001">http_8001</option>
+              <option value="imap4">imap4</option>
+              <option value="IRC">IRC</option>
+              <option value="iso_tsap">iso_tsap</option>
+              <option value="klogin">klogin</option>
+              <option value="kshell">kshell</option>
+              <option value="ldap">ldap</option>
+              <option value="link">link</option>
+              <option value="login">login</option>
+              <option value="mtp">mtp</option>
+              <option value="name">name</option>
+              <option value="netbios_dgm">netbios_dgm</option>
+              <option value="netbios_ns">netbios_ns</option>
+              <option value="netbios_ssn">netbios_ssn</option>
+              <option value="netstat">netstat</option>
+              <option value="nnsp">nnsp</option>
+              <option value="nntp">nntp</option>
+              <option value="ntp_u">ntp_u</option>
+              <option value="other">other</option>
+              <option value="pm_dump">pm_dump</option>
+              <option value="pop_2">pop_2</option>
+              <option value="pop_3">pop_3</option>
+              <option value="printer">printer</option>
+              <option value="private">private</option>
+              <option value="red_i">red_i</option>
+              <option value="remote_job">remote_job</option>
+              <option value="rje">rje</option>
+              <option value="shell">shell</option>
+              <option value="smtp">smtp</option>
+              <option value="sql_net">sql_net</option>
+              <option value="ssh">ssh</option>
+              <option value="sunrpc">sunrpc</option>
+              <option value="supdup">supdup</option>
+              <option value="systat">systat</option>
+              <option value="telnet">telnet</option>
+              <option value="tftp_u">tftp_u</option>
+              <option value="tim_i">tim_i</option>
+              <option value="time">time</option>
+              <option value="urh_i">urh_i</option>
+              <option value="urp_i">urp_i</option>
+              <option value="uucp">uucp</option>
+              <option value="uucp_path">uucp_path</option>
+              <option value="vmnet">vmnet</option>
+              <option value="whois">whois</option>
+              <option value="X11">X11</option>
+              <option value="Z39_50">Z39_50</option>
+            </select>
+          </div>
+
+          <!-- Connection Flag -->
+          <div class="space-y-2">
+            <label for="flag" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4a4 4 0 014-4h6a4 4 0 014 4v4"></path>
+              </svg>
+              Connection Flag
+            </label>
+            <select name="flag" id="flag" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300">
+              <option value="">Select Flag</option>
+              <option value="OTH">OTH (Other)</option>
+              <option value="REJ">REJ (Rejected)</option>
+              <option value="RSTO">RSTO (Reset-Sent)</option>
+              <option value="RSTOS0">RSTOS0 (Source Reset)</option>
+              <option value="RSTR">RSTR (Reset-Received)</option>
+              <option value="S0">S0 (Connection Attempt)</option>
+              <option value="S1">S1 (Connection Close)</option>
+              <option value="S2">S2 (Connection Close)</option>
+              <option value="S3">S3 (Connection Close)</option>
+              <option value="SF">SF (Normal)</option>
+              <option value="SH">SH (SYN-Half)</option>
+            </select>
+          </div>
+
+          <!-- Source Bytes -->
+          <div class="space-y-2">
+            <label for="src_bytes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+              </svg>
+              Source Bytes
+            </label>
+            <input type="number" name="src_bytes" id="src_bytes" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Enter source bytes" />
+          </div>
+
+          <!-- Destination Bytes -->
+          <div class="space-y-2">
+            <label for="dst_bytes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+              </svg>
+              Destination Bytes
+            </label>
+            <input type="number" name="dst_bytes" id="dst_bytes" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Enter destination bytes" />
+          </div>
+
+          <!-- Logged In Status -->
+          <div class="space-y-2">
+            <label for="logged_in" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              Logged In Status
+            </label>
+            <select name="logged_in" id="logged_in" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300">
+              <option value="">Select Status</option>
+              <option value="0">Not Logged In (0)</option>
+              <option value="1">Logged In (1)</option>
+            </select>
+          </div>
+
+          <!-- Connection Count -->
+          <div class="space-y-2">
+            <label for="count" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              Connection Count
+            </label>
+            <input type="number" name="count" id="count" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Enter connection count" />
+          </div>
+
+          <!-- Service Connection Count -->
+          <div class="space-y-2">
+            <label for="srv_count" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+              </svg>
+              Service Connection Count
+            </label>
+            <input type="number" name="srv_count" id="srv_count" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Enter service count" />
+          </div>
+
+          <!-- SYN Error Rate -->
+          <div class="space-y-2">
+            <label for="serror_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              SYN Error Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="serror_rate" id="serror_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- REJ Error Rate -->
+          <div class="space-y-2">
+            <label for="rerror_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              REJ Error Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="rerror_rate" id="rerror_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- Service REJ Error Rate -->
+          <div class="space-y-2">
+            <label for="srv_rerror_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Service REJ Error Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="srv_rerror_rate" id="srv_rerror_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- Same Service Rate -->
+          <div class="space-y-2">
+            <label for="same_srv_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Same Service Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="same_srv_rate" id="same_srv_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- Different Service Rate -->
+          <div class="space-y-2">
+            <label for="diff_srv_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Different Service Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="diff_srv_rate" id="diff_srv_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- Destination Host Service Count -->
+          <div class="space-y-2">
+            <label for="dst_host_srv_count" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              Destination Host Service Count
+            </label>
+            <input type="number" name="dst_host_srv_count" id="dst_host_srv_count" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Enter host service count" />
+          </div>
+
+          <!-- Destination Host SYN Error Rate -->
+          <div class="space-y-2">
+            <label for="dst_host_serror_rate" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Destination Host SYN Error Rate
+            </label>
+            <input type="number" step="0.01" min="0" max="1" name="dst_host_serror_rate" id="dst_host_serror_rate" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500" placeholder="0.00 - 1.00" />
+          </div>
+
+          <!-- Form Actions -->
+          <div class="md:col-span-2 xl:col-span-3 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/30 dark:focus:ring-blue-400/30 transition-all duration-300 flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Analyze Traffic
+            </button>
+            <!-- <button type="button" id="generateDataBtn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-500/30 dark:focus:ring-green-400/30 transition-all duration-300 flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Generate Sample
+            </button> -->
+            <button type="button" id="resetFormBtn" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 dark:from-gray-400 dark:to-gray-500 dark:hover:from-gray-500 dark:hover:to-gray-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-500/30 dark:focus:ring-gray-400/30 transition-all duration-300 flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset Form
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results Section -->
+      {% if prediction %}
+      <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-card dark:to-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300">
+        <div class="px-8 py-6 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-xl mr-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Analysis Results</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Traffic classification and security assessment</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
+                <span class="text-blue-600 dark:text-blue-400 font-semibold">AI Analysis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-lg text-gray-600 dark:text-gray-400 mb-2">Traffic Classification:</p>
+              <p class="text-4xl font-bold {% if prediction == 'normal' %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %} mb-4">
+                {{ prediction|title }}
+              </p>
+              <div class="flex items-center">
+                {% if prediction == 'normal' %}
+                <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-green-600 dark:text-green-400 font-medium">Traffic appears to be normal</span>
+                {% else %}
+                <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-red-600 dark:text-red-400 font-medium">Potential security threat detected</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Analyzed at:</p>
+              <p class="text-lg text-gray-900 dark:text-gray-100 font-semibold">{{ timestamp }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+
+    <script>
+      // Load sample_data.json once and cache it
+      let sampleData = null;
+      async function loadSampleData() {
+        if (sampleData) return sampleData;
+        try {
+          const response = await fetch('/static/sample_data.json');
+          sampleData = await response.json();
+          return sampleData;
+        } catch (error) {
+          console.error('Error loading sample data:', error);
+          return [];
+        }
+      }
+
+      // Generate sample data
+      document.getElementById("generateDataBtn").onclick = async function() {
+        const button = this;
+        const originalText = button.innerHTML;
+        
+        // Add loading state
+        button.innerHTML = '<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...';
+        button.disabled = true;
+        
+        try {
+          const data = await loadSampleData();
+          const randomIndex = Math.floor(Math.random() * data.length);
+          const sample = data[randomIndex];
+          const form = document.getElementById("predictForm");
+          
+                     // Fill form fields
+           Object.keys(sample).forEach(key => {
+             const el = form.elements.namedItem(key);
+             if (el) {
+               el.value = sample[key];
+             }
+           });
+           
+           // Also populate JSON textarea
+           document.getElementById("jsonInput").value = JSON.stringify(sample, null, 2);
+          
+        } catch (error) {
+          console.error('Error generating sample:', error);
+        } finally {
+          // Restore button
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+          }, 1000);
+        }
+      };
+
+             // Reset form
+       document.getElementById("resetFormBtn").onclick = function() {
+         if (confirm('Are you sure you want to reset all form fields?')) {
+           document.getElementById("predictForm").reset();
+         }
+       };
+
+       // Fill form from JSON data
+       document.getElementById("fillFormBtn").onclick = function() {
+         const jsonInput = document.getElementById("jsonInput");
+         const form = document.getElementById("predictForm");
+         
+         try {
+           // Clean the input - remove any leading numbers, tabs, or extra characters
+           let cleanedInput = jsonInput.value.trim();
+           
+           // Remove leading numbers and tabs (like "2.	")
+           cleanedInput = cleanedInput.replace(/^\d+\.\s*\t*\s*/, '');
+           
+           // Parse JSON data
+           let jsonData = JSON.parse(cleanedInput);
+           
+           // Handle case where data is wrapped in an array
+           if (Array.isArray(jsonData)) {
+             if (jsonData.length > 0) {
+               jsonData = jsonData[0]; // Take the first object from the array
+             } else {
+               throw new Error('Array is empty');
+             }
+           }
+           
+                        // Fill form fields with JSON data
+             Object.keys(jsonData).forEach(key => {
+               const element = form.elements.namedItem(key);
+               if (element) {
+                 element.value = jsonData[key];
+               }
+             });
+             
+           } catch (error) {
+             console.error('Error parsing JSON:', error);
+           }
+                };
+         
+         // Dark mode functionality
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const html = document.documentElement;
+
+      // Check for saved dark mode preference
+      if (
+        localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        html.classList.add("dark");
+      }
+
+      // Toggle dark mode
+      darkModeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark");
+        localStorage.setItem("darkMode", html.classList.contains("dark"));
+      });
+
+      // Listen for system theme changes
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("darkMode")) {
+            html.classList.toggle("dark", e.matches);
+          }
+        });
+    </script>
+  </body>
+</html> 

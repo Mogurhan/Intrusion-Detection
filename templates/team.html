@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Our Team - CyberSafe IDS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#1a1a1a",
+                card: "#2d2d2d",
+                text: "#e5e5e5",
+                border: "#404040",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .dark-mode-transition {
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-50 dark:bg-dark-bg dark:text-dark-text dark-mode-transition"
+  >
+    <!-- Header -->
+    <header
+      class="bg-white shadow-md sticky top-0 z-10 dark:bg-dark-card dark:shadow-gray-900 dark-mode-transition"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-8">
+          <a
+            href="/"
+            class="text-2xl font-bold text-blue-600 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+            CyberSafe IDS
+          </a>
+          <nav class="space-x-6 hidden md:flex">
+            <a
+              href="/"
+              class="text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 font-medium transition-colors"
+              >Home</a
+            >
+            
+            <a
+              href="/predict"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >Detection Analysis</a
+            >
+            
+            <a
+              href="/statistics"
+              class="text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400 font-medium transition-colors"
+              >Statistics</a
+            >
+            <a
+              href="/team"
+              class="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 font-medium transition-colors"
+              >Our Team</a
+            >
+            {% if session.role == 'admin' %}
+            <a
+              href="/admin/users"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >User Management</a
+            >
+            {% endif %}
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button
+            id="darkModeToggle"
+            class="p-2 rounded-lg bg-gray-200 dark:bg-dark-card hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle Dark Mode"
+          >
+            <!-- Sun Icon -->
+            <svg
+              id="lightIcon"
+              class="w-5 h-5 text-yellow-500 hidden dark:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <!-- Moon Icon -->
+            <svg
+              id="darkIcon"
+              class="w-5 h-5 text-gray-700 block dark:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+          {% if 'user_id' in session %}
+          <a href="/profile" class="flex items-center group">
+            <div class="relative flex items-center">
+              {% if session.profile_image %}
+              <img
+                src="{{ url_for('static', filename='uploads/' + session.profile_image) }}"
+                alt="Profile"
+                class="h-8 w-8 rounded-full object-cover border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              />
+              {% else %}
+              <div
+                class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              >
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >{{ session.username[0].upper() }}</span
+                >
+              </div>
+              {% endif %}
+              <span
+                class="ml-2 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                >{{ session.username }}</span
+              >
+              <span
+                class="absolute top-0 right-0 -mt-1 -mr-1 h-2 w-2 rounded-full bg-green-400 border-2 border-white dark:border-dark-card"
+              ></span>
+            </div>
+          </a>
+          <a
+            href="/logout"
+            class="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium"
+            >Logout</a
+          >
+          {% else %}
+          <div class="flex items-center space-x-4">
+            <a
+              href="/login"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Login</a
+            >
+            <a
+              href="/signup"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Sign Up</a
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Team Section -->
+    <div class="max-w-7xl mx-auto px-4 py-16">
+      <!-- Team Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          Meet Our Team
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          We are a passionate team of experts dedicated to revolutionizing
+          network security through advanced intrusion detection
+          systems.
+        </p>
+      </div>
+
+      <!-- Team Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <!-- Team Member 1 -->
+        <div
+          class="bg-white dark:bg-dark-card rounded-xl shadow-lg dark:shadow-gray-900 overflow-hidden transform hover:scale-105 transition-transform duration-300"
+        >
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='profile_images/abdikadir.jpg') }}"
+              alt="Abdikadir Sharif"
+              class="w-full h-74 object-cover"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Abdikadir Sharif Mohamed
+            </h3>
+            <p class="text-blue-600 dark:text-blue-400 font-medium mb-3">
+              Full Stack Developer & Team Lead
+            </p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+              Leading the development of our AI-powered security platform with
+              expertise in system architecture and full-stack development.
+            </p>
+            <div
+              class="flex justify-center space-x-6 pt-4 border-t border-gray-100 dark:border-gray-700"
+            >
+              <a
+                href="https://github.com/caaaqil"
+                class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://linkedin.com/in/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="mailto:abdikadir.sharif@gmail.com"
+                class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Member 2 -->
+        <div
+          class="bg-white dark:bg-dark-card rounded-xl shadow-lg dark:shadow-gray-900 overflow-hidden transform hover:scale-105 transition-transform duration-300"
+        >
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='profile_images/gurhan.jpeg') }}"
+              alt="Mohamoud Mohamed Gurhan"
+              class="w-full h-74 object-cover"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Mohamoud Mohamed Gurhan
+            </h3>
+            <p class="text-green-600 dark:text-green-400 font-medium mb-3">
+              Machine Learning Engineer
+            </p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+              Developing cutting-edge machine learning algorithms for advanced
+              intrusion detection and threat analysis.
+            </p>
+            <div
+              class="flex justify-center space-x-6 pt-4 border-t border-gray-100 dark:border-gray-700"
+            >
+              <a
+                href="https://github.com/Mogurhan"
+                class="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://linkedin.com/in/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="mailto:ali.hassan@gmail.com"
+                class="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Member 3 -->
+        <div
+          class="bg-white dark:bg-dark-card rounded-xl shadow-lg dark:shadow-gray-900 overflow-hidden transform hover:scale-105 transition-transform duration-300"
+        >
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='profile_images/default.svg') }}"
+              alt="Shaafi'e Abdillahi Hussein"
+              class="w-full h-74 object-cover"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Shaafi'e Abdillahi Hussein
+            </h3>
+            <p class="text-purple-600 dark:text-purple-400 font-medium mb-3">
+              UI/UX Designer
+            </p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+              Creating intuitive and beautiful user interfaces that make complex
+              security features accessible to everyone.
+            </p>
+            <div
+              class="flex justify-center space-x-6 pt-4 border-t border-gray-100 dark:border-gray-700"
+            >
+              <a
+                href="https://github.com/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://linkedin.com/in/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="mailto:ali.hassan@gmail.com"
+                class="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Member 4 -->
+        <div
+          class="bg-white dark:bg-dark-card rounded-xl shadow-lg dark:shadow-gray-900 overflow-hidden transform hover:scale-105 transition-transform duration-300"
+        >
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='profile_images/default.svg') }}"
+              alt="Zamzam Abdulkadir Abdi"
+              class="w-full h-74 object-cover"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Zamzam Abdulkadir Abdi
+            </h3>
+            <p class="text-indigo-600 dark:text-indigo-400 font-medium mb-3">
+              Security Analyst
+            </p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+              Specializing in threat detection and analysis, ensuring our system
+              stays ahead of emerging security challenges.
+            </p>
+            <div
+              class="flex justify-center space-x-6 pt-4 border-t border-gray-100 dark:border-gray-700"
+            >
+              <a
+                href="https://github.com/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://linkedin.com/in/yourusername"
+                class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="mailto:sarah.omar@gmail.com"
+                class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transform hover:scale-110 transition-transform duration-300"
+              >
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Dark mode functionality
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const html = document.documentElement;
+
+      // Check for saved dark mode preference
+      if (
+        localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        html.classList.add("dark");
+      }
+
+      // Toggle dark mode
+      darkModeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark");
+        localStorage.setItem("darkMode", html.classList.contains("dark"));
+      });
+
+      // Listen for system theme changes
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("darkMode")) {
+            html.classList.toggle("dark", e.matches);
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+# Project Setup Instructions
+#
+# 1. (Recommended) Create and activate a virtual environment:
+#    On Windows:
+#        python -m venv venv
+#        venv\Scripts\activate
+#    On macOS/Linux:
+#        python3 -m venv venv
+#        source venv/bin/activate
+#
+# 2. Install all required Python packages:
+#        pip install -r requirements.txt
+#
+# 3. Make sure MySQL server is running.
+#    (Default config: user 'root', password '', host 'localhost')
+#    If your MySQL password is not empty, update it in app.py.
+#
+# 4. Place your trained model file at:
+#        models/xgboost_best_model.pkl
+#
+# 5. Run the Flask app:
+#        python app.py
+#
+# 6. Open your browser and go to:
+#        http://localhost:5000
+#
+# 7. Register a new user and start using the app!
+
+Flask
+numpy
+joblib
+mysql-connector-python
+Werkzeug
+scikit-learn
+pillow 

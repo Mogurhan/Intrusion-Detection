@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Analytics Dashboard - CyberSafe IDS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#1a1a1a",
+                card: "#2d2d2d",
+                text: "#e5e5e5",
+                border: "#404040"
+              },
+              premium: {
+                gold: "#FFD700",
+                silver: "#C0C0C0",
+                bronze: "#CD7F32",
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-up': 'slideUp 0.6s ease-out',
+              'pulse-slow': 'pulse 3s infinite',
+              'bounce-slow': 'bounce 2s infinite',
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      .dark-mode-transition {
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .premium-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      
+      .premium-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      
+      .dark .premium-card {
+        background: linear-gradient(145deg, #2d2d2d 0%, #1a1a1a 100%);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+      }
+      
+      .glass-effect {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .premium-badge {
+        background: linear-gradient(45deg, #FFD700, #FFA500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    </style>
+</head>
+  <body
+    class="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-dark-bg dark:to-gray-900 dark:text-dark-text dark-mode-transition min-h-screen"
+  >
+  <!-- Header -->
+  <header
+      class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-10 dark:bg-dark-card/80 dark:shadow-gray-900 dark-mode-transition"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-8">
+          <a
+            href="/"
+            class="text-2xl font-bold text-blue-600 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+            CyberSafe IDS
+          </a>
+          <nav class="space-x-6 hidden md:flex">
+            <a
+              href="/"
+              class="text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 font-medium transition-colors"
+              >Home</a
+            >
+            
+            <a
+              href="/predict"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >Detection Analysis</a
+            >
+            
+            <a
+              href="/statistics"
+              class="text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400 font-medium transition-colors"
+              >Statistics</a
+            >
+            <a
+              href="/team"
+              class="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 font-medium transition-colors"
+              >Our Team</a
+            >
+            {% if session.role == 'admin' %}
+            <a
+              href="/admin/users"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >User Management</a
+            >
+            {% endif %}
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button
+            id="darkModeToggle"
+            class="p-2 rounded-lg bg-gray-200 dark:bg-dark-card hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle Dark Mode"
+          >
+            <!-- Sun Icon -->
+            <svg
+              id="lightIcon"
+              class="w-5 h-5 text-yellow-500 hidden dark:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <!-- Moon Icon -->
+            <svg
+              id="darkIcon"
+              class="w-5 h-5 text-gray-700 block dark:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+          {% if 'user_id' in session %}
+          <a href="/profile" class="flex items-center group">
+            <div class="relative flex items-center">
+              {% if session.profile_image %}
+              <img
+                src="{{ url_for('static', filename='uploads/' + session.profile_image) }}"
+                alt="Profile"
+                class="h-8 w-8 rounded-full object-cover border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              />
+              {% else %}
+              <div
+                class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              >
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >{{ session.username[0].upper() }}</span
+                >
+              </div>
+              {% endif %}
+              <span
+                class="ml-2 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                >{{ session.username }}</span
+              >
+              <span
+                class="absolute top-0 right-0 -mt-1 -mr-1 h-2 w-2 rounded-full bg-green-400 border-2 border-white dark:border-dark-card"
+              ></span>
+            </div>
+          </a>
+          <a
+            href="/logout"
+            class="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium"
+            >Logout</a
+          >
+          {% else %}
+          <div class="flex items-center space-x-4">
+            <a
+              href="/login"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Login</a
+            >
+            <a
+              href="/signup"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Sign Up</a
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+  <!-- Main Content -->
+  <div class="pt-8 max-w-7xl mx-auto px-4 pb-12">
+
+
+    {% if not session.user_id %}
+    <div class="text-center py-12">
+      <div
+        class="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-6 py-8 rounded-lg max-w-2xl mx-auto"
+      >
+        <svg class="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <h2 class="text-2xl font-bold mb-4">Login Required</h2>
+        <p class="text-lg mb-6">
+          Please log in to view detailed network traffic statistics and analytics. This feature provides insights into your network's security status.
+        </p>
+        <div class="flex justify-center space-x-4">
+          <a
+            href="/login"
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors font-medium"
+            >Login</a
+          >
+          <a
+            href="/signup"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors font-medium"
+            >Sign Up</a
+          >
+        </div>
+      </div>
+    </div>
+    {% else %}
+    
+
+
+    {% if is_admin %}
+    <!-- Admin Premium Dashboard -->
+    <div class="premium-card rounded-2xl p-8 mb-8 animate-slide-up">
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+          <i class="fas fa-users-cog text-blue-500 mr-3"></i>
+          System-wide Analytics
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-users text-blue-500 text-2xl"></i>
+            <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Users</span>
+          </div>
+          <p class="text-3xl font-bold text-blue-700 dark:text-blue-400">{{ user_count }}</p>
+          <p class="text-blue-600 dark:text-blue-400 text-sm mt-2">Active accounts</p>
+        </div>
+        
+        <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-shield-check text-green-500 text-2xl"></i>
+            <span class="text-green-600 dark:text-green-400 text-sm font-medium">Total Detections</span>
+          </div>
+          <p class="text-3xl font-bold text-green-700 dark:text-green-400">{{ total }}</p>
+          <p class="text-green-600 dark:text-green-400 text-sm mt-2">Security scans</p>
+        </div>
+        
+        <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-check-circle text-indigo-500 text-2xl"></i>
+            <span class="text-indigo-600 dark:text-indigo-400 text-sm font-medium">Normal Traffic</span>
+          </div>
+          <p class="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{{ stats.get('normal', 0) }}</p>
+          <p class="text-indigo-600 dark:text-indigo-400 text-sm mt-2">{{ "%.1f"|format(stats.get('normal', 0) / total * 100 if total > 0 else 0) }}% of total</p>
+        </div>
+        
+        <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            <span class="text-red-600 dark:text-red-400 text-sm font-medium">Threats</span>
+          </div>
+          <p class="text-3xl font-bold text-red-700 dark:text-red-400">{{ stats.get('anomaly', 0) }}</p>
+          <p class="text-red-600 dark:text-red-400 text-sm mt-2">{{ "%.1f"|format(stats.get('anomaly', 0) / total * 100 if total > 0 else 0) }}% of total</p>
+        </div>
+      </div>
+
+      <!-- Advanced Analytics Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
+            Traffic Distribution
+          </h3>
+          <div class="h-64">
+            <canvas id="trafficDistributionChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="fas fa-chart-line text-green-500 mr-2"></i>
+            Detection Timeline
+          </h3>
+          <div class="h-64">
+            <canvas id="detectionTimelineChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Statistics Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+          <i class="fas fa-table text-purple-500 mr-2"></i>
+          User Detection Statistics
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  User
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Detection Count
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Percentage
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {% for user_stat in user_stats %}
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                      <span class="text-blue-600 dark:text-blue-400 font-medium text-sm">{{ user_stat.username[0].upper() }}</span>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900 dark:text-white">{{ user_stat.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  {{ user_stat.count }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  {{ user_stat.percentage }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    <i class="fas fa-circle text-xs mr-1"></i>
+                    Active
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <!-- User Premium Dashboard -->
+    <div class="premium-card rounded-2xl p-8 mb-8 animate-slide-up">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+          <i class="fas fa-user-shield text-green-500 mr-3"></i>
+          Your Security Analytics
+        </h2>
+
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-shield-alt text-blue-500 text-2xl"></i>
+            <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Detections</span>
+          </div>
+          <p class="text-3xl font-bold text-blue-700 dark:text-blue-400">{{ total }}</p>
+          <p class="text-blue-600 dark:text-blue-400 text-sm mt-2">Security scans performed</p>
+        </div>
+        
+        <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+            <span class="text-green-600 dark:text-green-400 text-sm font-medium">Normal Traffic</span>
+          </div>
+          <p class="text-3xl font-bold text-green-700 dark:text-green-400">{{ stats.get('normal', 0) }}</p>
+          <p class="text-green-600 dark:text-green-400 text-sm mt-2">{{ "%.1f"|format(stats.get('normal', 0) / total * 100 if total > 0 else 0) }}% of total</p>
+        </div>
+        
+        <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="flex items-center justify-between mb-4">
+            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            <span class="text-red-600 dark:text-red-400 text-sm font-medium">Threats Detected</span>
+          </div>
+          <p class="text-3xl font-bold text-red-700 dark:text-red-400">{{ stats.get('anomaly', 0) }}</p>
+          <p class="text-red-600 dark:text-red-400 text-sm mt-2">{{ "%.1f"|format(stats.get('anomaly', 0) / total * 100 if total > 0 else 0) }}% of total</p>
+        </div>
+      </div>
+
+      <!-- Advanced Analytics Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
+            Traffic Analysis
+          </h3>
+          <div class="h-64">
+            <canvas id="userTrafficChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="fas fa-chart-line text-green-500 mr-2"></i>
+            Detection History
+          </h3>
+          <div class="h-64">
+            <canvas id="userTimelineChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+
+
+    <!-- Action Buttons -->
+    <div class="flex justify-center">
+      <a href="/predict" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
+        <i class="fas fa-plus mr-2"></i>
+        New Analysis
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+      // Dark mode functionality
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const html = document.documentElement;
+
+      // Check for saved dark mode preference
+      if (localStorage.getItem('darkMode') === 'true' ||
+          (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+
+      // Toggle dark mode
+      darkModeToggle.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        localStorage.setItem('darkMode', html.classList.contains('dark'));
+        updateChartColors();
+      });
+
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('darkMode')) {
+          html.classList.toggle('dark', e.matches);
+          updateChartColors();
+        }
+      });
+
+      // Chart functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const chartData = {
+          normal: {{ stats.get('normal', 0)|tojson }},
+          anomaly: {{ stats.get('anomaly', 0)|tojson }}
+        };
+
+        const isDark = html.classList.contains('dark');
+
+        // Main Traffic Chart
+        const userTrafficCtx = document.getElementById('userTrafficChart');
+        if (userTrafficCtx) {
+          new Chart(userTrafficCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Normal Traffic', 'Threats Detected'],
+              datasets: [{
+                data: [chartData.normal, chartData.anomaly],
+                backgroundColor: [
+                  isDark ? 'rgba(52, 211, 153, 0.9)' : 'rgba(16, 185, 129, 0.9)',
+                  isDark ? 'rgba(239, 68, 68, 0.9)' : 'rgba(239, 68, 68, 0.9)'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '70%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    color: isDark ? '#e5e5e5' : '#374151',
+                    padding: 20,
+                    usePointStyle: true
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Timeline Chart
+        const userTimelineCtx = document.getElementById('userTimelineChart');
+        if (userTimelineCtx) {
+          new Chart(userTimelineCtx, {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+              datasets: [{
+                label: 'Detections',
+                data: [12, 19, 15, 25, 22, 30],
+                borderColor: isDark ? '#3B82F6' : '#2563EB',
+                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: isDark ? '#e5e5e5' : '#374151'
+                  },
+                  grid: {
+                    color: isDark ? '#404040' : '#e5e7eb'
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: isDark ? '#e5e5e5' : '#374151'
+                  },
+                  grid: {
+                    color: isDark ? '#404040' : '#e5e7eb'
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Admin Charts
+        const trafficDistributionCtx = document.getElementById('trafficDistributionChart');
+        if (trafficDistributionCtx) {
+          new Chart(trafficDistributionCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Normal Traffic', 'Threats Detected'],
+              datasets: [{
+                data: [chartData.normal, chartData.anomaly],
+                backgroundColor: [
+                  isDark ? 'rgba(52, 211, 153, 0.9)' : 'rgba(16, 185, 129, 0.9)',
+                  isDark ? 'rgba(239, 68, 68, 0.9)' : 'rgba(239, 68, 68, 0.9)'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '70%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    color: isDark ? '#e5e5e5' : '#374151',
+                    padding: 20,
+                    usePointStyle: true
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        const detectionTimelineCtx = document.getElementById('detectionTimelineChart');
+        if (detectionTimelineCtx) {
+          new Chart(detectionTimelineCtx, {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+              datasets: [{
+                label: 'System Detections',
+                data: [45, 67, 52, 89, 76, 95],
+                borderColor: isDark ? '#10B981' : '#059669',
+                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(5, 150, 105, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: isDark ? '#e5e5e5' : '#374151'
+                  },
+                  grid: {
+                    color: isDark ? '#404040' : '#e5e7eb'
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: isDark ? '#e5e5e5' : '#374151'
+                  },
+                  grid: {
+                    color: isDark ? '#404040' : '#e5e7eb'
+                  }
+                }
+              }
+            }
+          });
+        }
+      });
+
+      function updateChartColors() {
+        // This function would update chart colors when dark mode changes
+        // Implementation depends on specific chart library being used
+      }
+  </script>
+</body>
+</html>

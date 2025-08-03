@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberSafe IDS - Intelligent Intrusion Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#1a1a1a",
+                card: "#2d2d2d",
+                text: "#e5e5e5",
+                border: "#404040",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Dark mode transitions */
+      .dark-mode-transition {
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-50 font-sans dark:bg-dark-bg dark:text-dark-text dark-mode-transition"
+  >
+    <!-- Header -->
+    <header
+      class="bg-white shadow-md sticky top-0 z-10 dark:bg-dark-card dark:shadow-gray-900 dark-mode-transition"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-8">
+          <a
+            href="/"
+            class="text-2xl font-bold text-blue-600 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+            CyberSafe IDS
+          </a>
+          <nav class="space-x-6 hidden md:flex">
+            <a
+              href="/"
+              class="text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 font-medium transition-colors"
+              >Home</a
+            >
+            
+            <a
+              href="/predict"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >Detection Analysis
+              </a>
+           
+            <a
+              href="/statistics"
+              class="text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400 font-medium transition-colors"
+              >Statistics</a
+            >
+            <a
+              href="/team"
+              class="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 font-medium transition-colors"
+              >Our Team</a
+            >
+            {% if session.role == 'admin' %}
+            <a
+              href="/admin/users"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >User Management</a
+            >
+            {% endif %}
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button
+            id="darkModeToggle"
+            class="p-2 rounded-lg bg-gray-200 dark:bg-dark-card hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle Dark Mode"
+          >
+            <!-- Sun Icon -->
+            <svg
+              id="lightIcon"
+              class="w-5 h-5 text-yellow-500 hidden dark:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <!-- Moon Icon -->
+            <svg
+              id="darkIcon"
+              class="w-5 h-5 text-gray-700 block dark:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+          {% if 'user_id' in session %}
+          <a href="/profile" class="flex items-center group">
+            <div class="relative flex items-center">
+              {% if session.profile_image %}
+              <img
+                src="{{ url_for('static', filename='uploads/' + session.profile_image) }}"
+                alt="Profile"
+                class="h-8 w-8 rounded-full object-cover border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              />
+              {% else %}
+              <div
+                class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              >
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >{{ session.username[0].upper() }}</span
+                >
+              </div>
+              {% endif %}
+              <span
+                class="ml-2 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                >{{ session.username }}</span
+              >
+              <span
+                class="absolute top-0 right-0 -mt-1 -mr-1 h-2 w-2 rounded-full bg-green-400 border-2 border-white dark:border-dark-card"
+              ></span>
+            </div>
+          </a>
+          <a
+            href="/logout"
+            class="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium"
+            >Logout</a
+          >
+          {% else %}
+          <div class="flex items-center space-x-4">
+            <a
+              href="/login"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Login</a
+            >
+            <a
+              href="/signup"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Sign Up</a
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section
+      class="relative bg-gradient-to-r from-blue-600 to-indigo-700 text-white overflow-hidden"
+    >
+      <div class="absolute inset-0">
+        <svg
+          class="absolute right-0 top-0 h-full w-1/2 transform translate-x-1/2"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          <path d="M0 0L100 0L50 100L0 100L0 0Z" fill="rgba(255,255,255,0.1)" />
+        </svg>
+      </div>
+      <div class="max-w-7xl mx-auto px-4 py-24 relative">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div data-aos="fade-right">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">
+              Secure Your Network with Human Powered Detection
+            </h1>
+            <p class="text-xl text-blue-100 mb-8">
+              CyberSafe IDS uses advanced machine learning to detect and prevent
+              network intrusions in real time.
+            </p>
+          
+            <div class="flex space-x-4">
+              <a
+                href="/predict"
+                class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              >
+                Start Detection
+              </a>
+              
+              <a
+                href="/statistics"
+                class="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-400 transition-colors"
+              >
+                View Statistics
+              </a>
+            </div>
+          </div>
+          <div class="hidden md:block" data-aos="fade-left">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 800 600"
+              class="w-full max-w-lg mx-auto"
+            >
+              <!-- Central Server -->
+              <g transform="translate(400,300)" class="animate-pulse">
+                <rect
+                  x="-50"
+                  y="-50"
+                  width="100"
+                  height="100"
+                  rx="10"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                />
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="30"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                />
+                <path
+                  d="M-20,-20 L20,20 M-20,20 L20,-20"
+                  stroke="white"
+                  stroke-width="3"
+                />
+              </g>
+
+              <!-- Network Connections -->
+              <g stroke="white" stroke-width="2">
+                <!-- Connection Lines -->
+                <path d="M400,250 L300,150" stroke-dasharray="5,5">
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="20"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <path d="M400,250 L500,150" stroke-dasharray="5,5">
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="20"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <path d="M400,350 L300,450" stroke-dasharray="5,5">
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="20"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <path d="M400,350 L500,450" stroke-dasharray="5,5">
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="20"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+              </g>
+
+              <!-- Network Nodes -->
+              <g fill="white">
+                <circle cx="300" cy="150" r="20" class="animate-pulse">
+                  <title>Protected Node 1</title>
+                </circle>
+                <circle cx="500" cy="150" r="20" class="animate-pulse">
+                  <title>Protected Node 2</title>
+                </circle>
+                <circle cx="300" cy="450" r="20" class="animate-pulse">
+                  <title>Protected Node 3</title>
+                </circle>
+                <circle cx="500" cy="450" r="20" class="animate-pulse">
+                  <title>Protected Node 4</title>
+                </circle>
+              </g>
+
+              <!-- Shield Protection Effect -->
+              <g>
+                <circle
+                  cx="400"
+                  cy="300"
+                  r="180"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.2)"
+                  stroke-width="2"
+                >
+                  <animate
+                    attributeName="r"
+                    values="180;190;180"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.2;0.5;0.2"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+                <circle
+                  cx="400"
+                  cy="300"
+                  r="190"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.1)"
+                  stroke-width="2"
+                >
+                  <animate
+                    attributeName="r"
+                    values="190;200;190"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.1;0.3;0.1"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </g>
+
+              <!-- Alert Indicators -->
+              <g>
+                <circle
+                  cx="300"
+                  cy="150"
+                  r="25"
+                  fill="none"
+                  stroke="rgba(255,0,0,0.3)"
+                  stroke-width="2"
+                >
+                  <animate
+                    attributeName="r"
+                    values="25;35;25"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.3;0;0.3"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+                <circle
+                  cx="500"
+                  cy="450"
+                  r="25"
+                  fill="none"
+                  stroke="rgba(0,255,0,0.3)"
+                  stroke-width="2"
+                >
+                  <animate
+                    attributeName="r"
+                    values="25;35;25"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.3;0;0.3"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </g>
+
+              <!-- Binary Data Flow -->
+              <g fill="white" font-family="monospace" font-size="12">
+                <text x="320" y="160">10110</text>
+                <text x="480" y="160">01001</text>
+                <text x="320" y="440">11100</text>
+                <text x="480" y="440">00111</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-white dark:bg-dark-card dark-mode-transition">
+      <div class="max-w-7xl mx-auto px-4">
+        <h2
+          class="text-3xl font-bold text-center text-gray-800 dark:text-dark-text mb-12"
+        >
+          Advanced Security Features
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div
+            class="bg-white dark:bg-dark-bg p-6 rounded-xl shadow-lg border border-gray-100 dark:border-dark-border"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div
+              class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-semibold text-gray-800 dark:text-dark-text mb-2"
+            >
+              Real-time Detection
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              Continuously monitors network traffic and identifies potential
+              threats using advanced machine learning algorithms.
+            </p>
+          </div>
+          <div
+            class="bg-white dark:bg-dark-bg p-6 rounded-xl shadow-lg border border-gray-100 dark:border-dark-border"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div
+              class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-green-600 dark:text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-semibold text-gray-800 dark:text-dark-text mb-2"
+            >
+              Detailed Analytics
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              Comprehensive statistics and visualizations help you understand
+              your network's security status at a glance.
+            </p>
+          </div>
+          <div
+            class="bg-white dark:bg-dark-bg p-6 rounded-xl shadow-lg border border-gray-100 dark:border-dark-border"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div
+              class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-4"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-purple-600 dark:text-purple-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                />
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-semibold text-gray-800 dark:text-dark-text mb-2"
+            >
+              Customizable Settings
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400">
+              Adjust detection parameters and sensitivity levels to match your
+              specific security requirements.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 bg-gray-50 dark:bg-dark-bg dark-mode-transition">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div
+            class="bg-white dark:bg-dark-card p-8 rounded-xl shadow-lg dark:shadow-gray-900"
+            data-aos="zoom-in"
+            data-aos-delay="100"
+          >
+            <div
+              class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2"
+            >
+              99.66%
+            </div>
+            <div class="text-gray-600 dark:text-gray-400">
+              Detection Accuracy
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-dark-card p-8 rounded-xl shadow-lg dark:shadow-gray-900"
+            data-aos="zoom-in"
+            data-aos-delay="200"
+          >
+            <div
+              class="text-4xl font-bold text-green-600 dark:text-green-400 mb-2"
+            >
+              &lt; 1ms
+            </div>
+            <div class="text-gray-600 dark:text-gray-400">Response Time</div>
+          </div>
+          <div
+            class="bg-white dark:bg-dark-card p-8 rounded-xl shadow-lg dark:shadow-gray-900"
+            data-aos="zoom-in"
+            data-aos-delay="300"
+          >
+            <div
+              class="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2"
+            >
+              24/7
+            </div>
+            <div class="text-gray-600 dark:text-gray-400">Monitoring</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section
+      class="py-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white dark:from-blue-800 dark:to-indigo-900 dark-mode-transition"
+    >
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-8">Ready to Secure Your Network?</h2>
+        <p class="text-xl text-blue-100 mb-8">
+          Start using CyberSafe IDS today and protect your network with advanced
+          detection.
+        </p>
+        <a
+          href="/signup"
+          class="inline-block bg-white dark:bg-dark-card text-blue-600 dark:text-blue-400 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 dark:hover:bg-dark-bg transition-colors"
+        >
+          Get Started Now
+        </a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer
+      class="bg-gray-800 dark:bg-dark-bg text-gray-300 py-12 dark-mode-transition"
+    >
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div class="col-span-2">
+            <div
+              class="text-2xl font-bold text-white dark:text-dark-text mb-4 flex items-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-8 w-8 mr-2"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+              CyberSafe IDS
+            </div>
+            <p class="text-gray-400 dark:text-gray-500">
+              Advanced intrusion detection system powered by artificial
+              intelligence and machine learning.
+            </p>
+          </div>
+          <div>
+            <h3
+              class="text-lg font-semibold text-white dark:text-dark-text mb-4"
+            >
+              Quick Links
+            </h3>
+            <ul class="space-y-2">
+              <li>
+                <a href="/" class="hover:text-white dark:hover:text-dark-text"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/predict"
+                  class="hover:text-white dark:hover:text-dark-text"
+                  >Detection</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/statistics"
+                  class="hover:text-white dark:hover:text-dark-text"
+                  >Statistics</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/login"
+                  class="hover:text-white dark:hover:text-dark-text"
+                  >Login</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-lg font-semibold text-white dark:text-dark-text mb-4"
+            >
+              Contact
+            </h3>
+            <ul class="space-y-2 dark:text-gray-400">
+              <li>Email: Abdikadir.sharif@gmail.com</li>
+              <li>Phone: +252 617273320</li>
+              <li>Support: 24/7</li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 dark:border-dark-border mt-12 pt-8 text-center text-gray-400 dark:text-gray-500"
+        >
+          <p>&copy; 2024 CyberSafe IDS. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      AOS.init({
+        duration: 1000,
+        once: true,
+      });
+
+      // Dark mode functionality
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const html = document.documentElement;
+
+      // Check for saved dark mode preference
+      if (
+        localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        html.classList.add("dark");
+      }
+
+      // Toggle dark mode
+      darkModeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark");
+        localStorage.setItem("darkMode", html.classList.contains("dark"));
+      });
+
+      // Listen for system theme changes
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("darkMode")) {
+            html.classList.toggle("dark", e.matches);
+          }
+        });
+    </script>
+  </body>
+</html>

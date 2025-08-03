@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis Result - CyberSafe IDS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#1a1a1a",
+                card: "#2d2d2d",
+                text: "#e5e5e5",
+                border: "#404040",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .dark-mode-transition {
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-50 dark:bg-dark-bg dark:text-dark-text dark-mode-transition min-h-screen"
+  >
+    <!-- Header -->
+    <header
+      class="bg-white shadow-md sticky top-0 z-10 dark:bg-dark-card dark:shadow-gray-900 dark-mode-transition"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-8">
+          <a
+            href="/"
+            class="text-2xl font-bold text-blue-600 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+            CyberSafe IDS
+          </a>
+          <nav class="space-x-6 hidden md:flex">
+            <a
+              href="/"
+              class="text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 font-medium transition-colors"
+              >Home</a
+            >
+            
+            <a
+              href="/predict"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >Detection Analysis
+              </a>
+           
+            <a
+              href="/statistics"
+              class="text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400 font-medium transition-colors"
+              >Statistics</a
+            >
+            <a
+              href="/team"
+              class="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400 font-medium transition-colors"
+              >Our Team</a
+            >
+            {% if session.role == 'admin' %}
+            <a
+              href="/admin/users"
+              class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 font-medium transition-colors"
+              >User Management</a
+            >
+            {% endif %}
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button
+            id="darkModeToggle"
+            class="p-2 rounded-lg bg-gray-200 dark:bg-dark-card hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle Dark Mode"
+          >
+            <!-- Sun Icon -->
+            <svg
+              id="lightIcon"
+              class="w-5 h-5 text-yellow-500 hidden dark:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <!-- Moon Icon -->
+            <svg
+              id="darkIcon"
+              class="w-5 h-5 text-gray-700 block dark:hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+          {% if 'user_id' in session %}
+          <a href="/profile" class="flex items-center group">
+            <div class="relative flex items-center">
+              {% if session.profile_image %}
+              <img
+                src="{{ url_for('static', filename='uploads/' + session.profile_image) }}"
+                alt="Profile"
+                class="h-8 w-8 rounded-full object-cover border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              />
+              {% else %}
+              <div
+                class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors"
+              >
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >{{ session.username[0].upper() }}</span
+                >
+              </div>
+              {% endif %}
+              <span
+                class="ml-2 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                >{{ session.username }}</span
+              >
+              <span
+                class="absolute top-0 right-0 -mt-1 -mr-1 h-2 w-2 rounded-full bg-green-400 border-2 border-white dark:border-dark-card"
+              ></span>
+            </div>
+          </a>
+          <a
+            href="/logout"
+            class="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium"
+            >Logout</a
+          >
+          {% else %}
+          <div class="flex items-center space-x-4">
+            <a
+              href="/login"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Login</a
+            >
+            <a
+              href="/signup"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+              >Sign Up</a
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Results Section -->
+      <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-card dark:to-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300">
+        <div class="px-8 py-6 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-xl mr-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Analysis Results</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Traffic classification and security assessment</p>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        <div class="p-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-lg text-gray-600 dark:text-gray-400 mb-2">Traffic Classification:</p>
+              <p class="text-4xl font-bold {% if session.last_prediction.prediction == 'normal' %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %} mb-4">
+                {{ session.last_prediction.prediction|title }}
+              </p>
+              <div class="flex items-center">
+                {% if session.last_prediction.prediction == 'normal' %}
+                <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-green-600 dark:text-green-400 font-medium">Traffic appears to be normal</span>
+                {% else %}
+                <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-red-600 dark:text-red-400 font-medium">Potential security threat detected</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Confidence:</p>
+              <p class="text-lg text-gray-900 dark:text-gray-100 font-semibold">{{ session.last_prediction.confidence }}</p>
+            </div>
+          </div>
+
+          <!-- Recommendations Section -->
+          <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+            {% if session.last_prediction.prediction == 'anomaly' %}
+            <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg mb-6">
+              <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Immediate Actions Required
+              </h3>
+              <ul class="space-y-3 text-red-700 dark:text-red-200">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Isolate affected systems from the network
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Review system and network logs for suspicious activities
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Run a comprehensive security scan
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Update all security credentials and passwords
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Document the incident and strengthen security measures
+                </li>
+              </ul>
+            </div>
+            {% else %}
+            <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg mb-6">
+              <h3 class="text-lg font-semibold text-green-800 dark:text-green-300 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Preventive Measures
+              </h3>
+              <ul class="space-y-3 text-green-700 dark:text-green-200">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Maintain regular system updates and patches
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Keep monitoring network traffic patterns
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Implement strong access controls and authentication
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Regularly backup critical data and systems
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Conduct periodic security assessments
+                </li>
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <a
+              href="/predict"
+              class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/30 dark:focus:ring-blue-400/30 transition-all duration-300 flex items-center justify-center"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              New Analysis
+            </a>
+            <a
+              href="/statistics"
+              class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-500/30 dark:focus:ring-green-400/30 transition-all duration-300 flex items-center justify-center"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              View Statistics
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Dark mode functionality
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const html = document.documentElement;
+
+      // Profile dropdown functionality
+      const profileButton = document.getElementById("profileButton");
+      const profileDropdown = document.getElementById("profileDropdown");
+      let isDropdownOpen = false;
+
+      if (profileButton && profileDropdown) {
+        // Toggle dropdown on button click
+        profileButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          isDropdownOpen = !isDropdownOpen;
+          profileDropdown.classList.toggle("hidden");
+          profileButton.setAttribute("aria-expanded", isDropdownOpen);
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (
+            !profileButton.contains(e.target) &&
+            !profileDropdown.contains(e.target)
+          ) {
+            isDropdownOpen = false;
+            profileDropdown.classList.add("hidden");
+            profileButton.setAttribute("aria-expanded", "false");
+          }
+        });
+
+        // Handle keyboard navigation
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && isDropdownOpen) {
+            isDropdownOpen = false;
+            profileDropdown.classList.add("hidden");
+            profileButton.setAttribute("aria-expanded", "false");
+            profileButton.focus();
+          }
+        });
+      }
+
+      // Check for saved dark mode preference
+      if (
+        localStorage.getItem("darkMode") === "true" ||
+        (!localStorage.getItem("darkMode") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        html.classList.add("dark");
+      }
+
+      // Toggle dark mode
+      darkModeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark");
+        localStorage.setItem("darkMode", html.classList.contains("dark"));
+      });
+
+      // Listen for system theme changes
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("darkMode")) {
+            html.classList.toggle("dark", e.matches);
+          }
+        });
+    </script>
+  </body>
+</html>

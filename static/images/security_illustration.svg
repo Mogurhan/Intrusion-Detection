@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Modern Shield -->
+    <g filter="url(#shadow)">
+        <path d="M400 120c-100 0-180 30-240 60v200c0 120 100 160 240 200 140-40 240-80 240-200V180c-60-30-140-60-240-60z" fill="url(#shieldGradient)"/>
+    </g>
+
+    <!-- Network Lines -->
+    <g stroke="url(#linesGradient)" stroke-width="2" stroke-linecap="round" opacity="0.6">
+        <path d="M200 300c50-50 150-50 200-50M600 300c-50-50-150-50-200-50" />
+        <path d="M250 400c40-40 110-40 150-40M550 400c-40-40-110-40-150-40" />
+        <path d="M300 500c30-30 70-30 100-30M500 500c-30-30-70-30-100-30" />
+    </g>
+
+    <!-- Lock -->
+    <g transform="translate(350, 250)">
+        <!-- Lock Body -->
+        <rect x="0" y="40" width="100" height="120" rx="15" fill="url(#lockGradient)"/>
+        <!-- Lock Shackle -->
+        <path d="M25 40V20c0-14 11-20 25-20s25 6 25 20v20" stroke="url(#lockGradient)" stroke-width="12" stroke-linecap="round"/>
+        <!-- Keyhole -->
+        <circle cx="50" cy="100" r="15" fill="#fff" opacity="0.2"/>
+        <rect x="47" y="100" width="6" height="25" fill="#fff" opacity="0.2"/>
+    </g>
+
+    <!-- Floating Particles -->
+    <g fill="url(#particleGradient)">
+        <circle cx="200" cy="200" r="4" opacity="0.6">
+            <animate attributeName="cy" values="200;180;200" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="600" cy="200" r="4" opacity="0.6">
+            <animate attributeName="cy" values="200;220;200" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="300" cy="500" r="4" opacity="0.6">
+            <animate attributeName="cy" values="500;480;500" dur="1.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="500" cy="500" r="4" opacity="0.6">
+            <animate attributeName="cy" values="500;520;500" dur="2.2s" repeatCount="indefinite"/>
+        </circle>
+    </g>
+
+    <!-- Gradients and Filters -->
+    <defs>
+        <linearGradient id="shieldGradient" x1="400" y1="120" x2="400" y2="580">
+            <stop offset="0%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#6d28d9"/>
+        </linearGradient>
+
+        <linearGradient id="lockGradient" x1="50" y1="0" x2="50" y2="160">
+            <stop offset="0%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#4c1d95"/>
+        </linearGradient>
+
+        <linearGradient id="linesGradient" x1="200" y1="300" x2="600" y2="300">
+            <stop offset="0%" stop-color="#c4b5fd"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+        </linearGradient>
+
+        <linearGradient id="particleGradient" x1="0" y1="0" x2="800" y2="600">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="100%" stop-color="#7c3aed"/>
+        </linearGradient>
+
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+            <feOffset dx="0" dy="10"/>
+            <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+            <feColorMatrix values="0 0 0 0 0.545   0 0 0 0 0.361   0 0 0 0 0.965  0 0 0 0.5 0"/>
+        </filter>
+    </defs>
+</svg> 
