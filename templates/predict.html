@@ -507,7 +507,10 @@
         button.disabled = true;
         
         try {
-          const data = await loadSampleData();
+          // const data = await loadSampleData();
+          const data = JSON.parse(
+          document.getElementById("fillFormBtn").value || "[]"
+        );
           const randomIndex = Math.floor(Math.random() * data.length);
           const sample = data[randomIndex];
           const form = document.getElementById("predictForm");
