@@ -129,7 +129,7 @@
                  <!-- JSON Input Section -->
          <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600">
            <div class="flex items-center justify-between mb-4">
-             <button type="button" id="fillFormBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg flex items-center">
+             <button type="button" id="FillSample" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg flex items-center">
                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
                </svg>
@@ -498,7 +498,7 @@
       }
 
       // Generate sample data
-      document.getElementById("generateDataBtn").onclick = async function() {
+      document.getElementById("FillSample").onclick = async function() {
         const button = this;
         const originalText = button.innerHTML;
         
@@ -509,7 +509,7 @@
         try {
           // const data = await loadSampleData();
           const data = JSON.parse(
-          document.getElementById("fillFormBtn").value || "[]"
+          document.getElementById("jsonInput").value || "[]"
         );
           const randomIndex = Math.floor(Math.random() * data.length);
           const sample = data[randomIndex];
@@ -543,43 +543,6 @@
            document.getElementById("predictForm").reset();
          }
        };
-
-       // Fill form from JSON data
-       document.getElementById("fillFormBtn").onclick = function() {
-         const jsonInput = document.getElementById("jsonInput");
-         const form = document.getElementById("predictForm");
-         
-         try {
-           // Clean the input - remove any leading numbers, tabs, or extra characters
-           let cleanedInput = jsonInput.value.trim();
-           
-           // Remove leading numbers and tabs (like "2.	")
-           cleanedInput = cleanedInput.replace(/^\d+\.\s*\t*\s*/, '');
-           
-           // Parse JSON data
-           let jsonData = JSON.parse(cleanedInput);
-           
-           // Handle case where data is wrapped in an array
-           if (Array.isArray(jsonData)) {
-             if (jsonData.length > 0) {
-               jsonData = jsonData[0]; // Take the first object from the array
-             } else {
-               throw new Error('Array is empty');
-             }
-           }
-           
-                        // Fill form fields with JSON data
-             Object.keys(jsonData).forEach(key => {
-               const element = form.elements.namedItem(key);
-               if (element) {
-                 element.value = jsonData[key];
-               }
-             });
-             
-           } catch (error) {
-             console.error('Error parsing JSON:', error);
-           }
-                };
          
          // Dark mode functionality
       const darkModeToggle = document.getElementById("darkModeToggle");
